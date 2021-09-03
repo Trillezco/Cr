@@ -11,24 +11,15 @@ import imageio
 def SimArraytoNumpyArray(SimSnap, Quantity):
 	return SimSnap[Quantity].view(type=np.ndarray)
 	
-def MakeSlices(SimSnap, Width=0.01, Particles=999):
-	Multiply = 100 if (0.01 <= Width < 0.1) else 10 if (0.1 <= Width < 1) else 1 if (1 <= Width) else None
-	dlength = Width*Multiply
-	Z_min, Z_max = SimArraytoNumpyArray(SimSnap, "z").min(), SimArraytoNumpyArray(SimSnap,"z").max()
-	Z_min = int(Z_min*Multiply) ; Z_max = int(Z_max*Multiply)
-	Z_min = float(Z_min); Z_max = float(Z_max)
-	particles = np.array([]) ; Range = np.empty((0,2))
-	while (True):
-		lower = Z_min
-		upper = lower + dlength
-		if lower > Z_max:
-			break
-		Slice= SimSnap[pynbody.filt.BandPass('z', str(lower/Multiply)+" pc", str(upper/Multiply)+" pc")]	
-		particles = np.append(particles, len(Slice["x"])) ; Range = np.append(Range, [[lower/Multiply, upper/Multiply]], axis=0)
-		Z_min += dlength
-
-	masked=np.where(particles>Particles)
-	Range = Range[masked] ; Amount_Particles = particles[masked] 
+def MakeSlices(SimSnap, Limits=[0,1], Particles=999, Dlength=1):
+	Lower_Range, Upper_Range, particles = np.arange(Limits[0], Limits[1], Dlength), np.arange(Limits[0], Limits[1], Dlength)+Dlength,  np.array([])
+	Range = np.column_stack([Lower_Range, Upper_Range])
+	Range = np.around(Range, decimals = 1 if (0.1<= Dlength ) else 2 if ( 0.01 <= Dlength < 0.1) else None)
+	for i in Range:
+		Slice= SimSnap[pynbody.filt.BandPass('z', str(i[0])+" pc", str(i[1])+" pc")]	
+		particles = np.append(particles, len(Slice["x"]))
+	masked = np.where(particles > Particles)
+	Range = Range[masked]    ;    Amount_Particles = particles[masked]
 	return Range, Amount_Particles
 
 def Compare2DHistogram(SimSnap, Array=np.array([[0,1]]), Qty="rho", Width=1, Units=None, Bins=100, Range=None, Title="plot", Cmap="Spectral_r", Savefig=None, Show=False, Density=None):
