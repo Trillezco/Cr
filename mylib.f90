@@ -1,25 +1,22 @@
 module mylib
 contains
 
-  subroutine quantities(x, y, z, mfx, mfy, mfz, mass, density, len_snap, output_array) bind(C, name='quantities')
-    use iso_c_binding
-    implicit none
+	subroutine quantities(Positions, MagneticField, Mass, Rho, Out_MultiArray, Out_UniArray, Rows, Cols) bind(C, name='quantities')
+	use iso_c_binding
+	implicit none
     
-    integer(C_INT), intent(in) :: len_snap
-    real(C_DOUBLE), dimension(len_snap), intent(in) :: x, y, z, mfx, mfy, mfz, mass, density
-    real(C_DOUBLE), dimension(len_snap), intent(out) :: output_array
+	integer, intent(in), value :: Rows, Cols
+	real(C_DOUBLE), intent(in) :: Positions(Cols, Rows), MagneticField(Cols, Rows), Mass(Rows), Rho(Rows)
+	real(C_DOUBLE), intent(out) :: Out_MultiArray(Cols, Rows), Out_UniArray(Rows)
 	integer :: i
+    
+	Out_UniArray = Mass !*10
+	Out_MultiArray = MagneticField!*100
+	return
+	
+!	do i=1, 100
+!		print*, Out_MultiArray(2, i)
+!	enddo
 
-	do i=1, 100
-		output_array(i) = mfx(i)
-		print*, output_array(i)
-	end do
-		
   end subroutine quantities
 end module mylib
-
-
-
-
-
-
