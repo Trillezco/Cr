@@ -65,64 +65,33 @@ class Interface:
 		snap = pynbody.load(filename)
 		snap.set_units_system(velocity = 'km s^-1', mass = 'Msol', temperature = 'K', distance = 'pc') 
 		snap['rho'].convert_units('g cm**-3')
+		snap['mass'].convert_units('g')
 
-		c_x = (c_double*len(snap['x'].view(np.ndarray)))(*snap['x'].view(np.ndarray))
-		c_y = (c_double*len(snap['y'].view(np.ndarray)))(*snap['y'].view(np.ndarray))
-		c_z = (c_double*len(snap['z'].view(np.ndarray)))(*snap['z'].view(np.ndarray))
-		c_mfx = (c_double*len(snap['MagneticField_x'].view(np.ndarray)))(*snap['MagneticField_x'].view(np.ndarray))
-		c_mfy = (c_double*len(snap['MagneticField_y'].view(np.ndarray)))(*snap['MagneticField_y'].view(np.ndarray))
-		c_mfz = (c_double*len(snap['MagneticField_z'].view(np.ndarray)))(*snap['MagneticField_z'].view(np.ndarray))
+		c_pos = snap['pos'].view(np.ndarray).astype('double')
+		c_mf = snap['MagneticField'].view(np.ndarray).astype('double')
 		c_mass = (c_double*len(snap['mass'].view(np.ndarray)))(*snap['mass'].view(np.ndarray))
 		c_rho = (c_double*len(snap['rho'].view(np.ndarray)))(*snap['rho'].view(np.ndarray))
-		c_empty = (c_double*len(snap['rho'].view(np.ndarray)))(*snap['rho'].view(np.ndarray))
-		
-		self.library.quantities.argtypes = [POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int, POINTER(c_double)]
+
+		c_pos = c_pos.ctypes.data_as(POINTER(c_double))		
+		c_mf = c_mf.ctypes.data_as(POINTER(c_double))		
+
+		rows, cols = len(snap['mass']), 3
+
+		c_empty_unidim     = np.empty(shape=rows)
+		c_empty_multidim = np.empty(shape=(rows,cols))
+
+		c_empty_unidim = c_empty_unidim.ctypes.data_as(POINTER(c_double))
+		c_empty_multidim = c_empty_multidim.ctypes.data_as(POINTER(c_double))
+
+		self.library.quantities.argtypes = [POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int, c_int]
 		self.library.quantities.restype = None
 		
-		self.library.quantities(c_x, c_y, c_z, c_mfx, c_mfy, c_mfz, c_mass, c_rho, len(c_x), c_empty)
-
-		# print("PYTHON\n")
-		# for i in range(100):
-			# print(c_mfx[i])
+		self.library.quantities(c_pos, c_mf, c_mass, c_rho, c_empty_multidim, c_empty_unidim, c_int(rows), c_int(cols))
 		
+		uni_subroutine = c_empty_unidim
+		multi_subroutine = c_empty_multidim
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# solve chemistry from initial conditions
-    # def do_something(self, var_array, var_double):
-
-        # array size
-        # var_int = len(var_array)
-
-        # define library function INPUT types
-        # self.library.do_something.argtypes = [POINTER(c_double), POINTER(c_double), POINTER(c_int)]
-
-        # library function returns None as OUTPUT, since f90 subroutine
-        # self.library.do_something.restype = None
-
-        # convert array to c_double array
-        # var_array_ctype = (c_double * var_int)(*var_array)  # pointer to double array
-
-        # convert double argument to c_double
-        # var_double_ctype = c_double(var_double)
-
-        # convert integer to c_int
-        # var_int_ctype = c_int(var_int)
-
-        # do something
-        # self.library.do_something(var_array_ctype, var_double_ctype, var_int_ctype)
-
-        # return c_double results as list
-        # return list(var_array_ctype)
+		uni_subroutine = np.ctypeslib.as_array(uni_subroutine, shape=(rows,))
+		multi_subroutine = np.ctypeslib.as_array(multi_subroutine, shape=(rows, cols))
+		
+		return
