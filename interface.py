@@ -66,32 +66,44 @@ class Interface:
 		snap.set_units_system(velocity = 'km s^-1', mass = 'Msol', temperature = 'K', distance = 'pc') 
 		snap['rho'].convert_units('g cm**-3')
 		snap['mass'].convert_units('g')
-
-		c_pos = snap['pos'].view(np.ndarray).astype('double')
-		c_mf = snap['MagneticField'].view(np.ndarray).astype('double')
-		c_mass = (c_double*len(snap['mass'].view(np.ndarray)))(*snap['mass'].view(np.ndarray))
-		c_rho = (c_double*len(snap['rho'].view(np.ndarray)))(*snap['rho'].view(np.ndarray))
-
+		
+		#	Create POINTERs and give the corresponding types.
+		pos = snap['pos'].view(dtype=np.ndarray)
+		c_pos = pos.astype('double')
 		c_pos = c_pos.ctypes.data_as(POINTER(c_double))		
-		c_mf = c_mf.ctypes.data_as(POINTER(c_double))		
-
+		
+		magne = snap['MagneticField'].view(dtype=np.ndarray)
+		c_magne = magne.astype('double')
+		c_magne = c_magne.ctypes.data_as(POINTER(c_double))	
+		
+		mass = snap['mass'].view(dtype=np.ndarray)
+		c_mass = (c_double*len(mass) )(*mass)
+		
+		rho = snap['rho'].view(dtype=np.ndarray)
+		c_rho = (c_double*len(rho) )(*rho)
+		
+		# Dimensions
 		rows, cols = len(snap['mass']), 3
-
-		c_empty_unidim     = np.empty(shape=rows)
-		c_empty_multidim = np.empty(shape=(rows,cols))
-
-		c_empty_unidim = c_empty_unidim.ctypes.data_as(POINTER(c_double))
-		c_empty_multidim = c_empty_multidim.ctypes.data_as(POINTER(c_double))
-
-		self.library.quantities.argtypes = [POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int, c_int]
+		
+		#	Empty output array for python-fortran -> python result.
+		c_empty_multidim = np.empty(shape=(rows,cols), dtype='double')
+		c_empty_multidim = c_empty_multidim.ctypes.data_as(POINTER(c_double))	
+		
+		
+		# call library
+		self.library.quantities.argtypes = [POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), c_int, c_int]
 		self.library.quantities.restype = None
 		
-		self.library.quantities(c_pos, c_mf, c_mass, c_rho, c_empty_multidim, c_empty_unidim, c_int(rows), c_int(cols))
+		self.library.quantities(c_pos, c_magne, c_mass, c_rho, c_empty_multidim, c_int(rows), c_int(cols))
 		
-		uni_subroutine = c_empty_unidim
-		multi_subroutine = c_empty_multidim
+		# uni_subroutine = c_empty_unidim
 
-		uni_subroutine = np.ctypeslib.as_array(uni_subroutine, shape=(rows,))
-		multi_subroutine = np.ctypeslib.as_array(multi_subroutine, shape=(rows, cols))
+		# from pointers to numpy data
+		# uni_subroutine = np.ctypeslib.as_array(uni_subroutine, shape=(rows,))
+		# multi_subroutine = np.ctypeslib.as_array(multi_subroutine, shape=(rows, cols))
 		
+		# print('Output array returned on python\n', uni_subroutine[0:10])
+		# print(uni_subroutine[0,9]
 		return
+	
+	
