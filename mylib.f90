@@ -23,9 +23,9 @@ contains
 	real :: mincoeff = 0.9										! Coefficient to decrease kernel length
 	real :: maxcoeff = 1.1										! Coefficient to increase kernel length
 	real :: mineffectiveneigh = 1.61e-13, maxeffectiveneigh = 1.01e-10				! Range that weigth value needs to have.
-	real :: C_v = 4.188790																									! Constant
-	real :: weight																													! Function that actually calculates the Weigth.
-	integer :: i																															! Other parameters.
+	real :: C_v = 4.188790										! Constant
+	real :: weight											! Function that actually calculates the Weigth.
+	integer :: i											! Other parameters.
 
 	Out_UniArray = Positions
 		
@@ -46,23 +46,23 @@ contains
 	do i = 1 , 4000
 		radius = 0.7
 		neighbour = weight( Points(1:3 , i), Positions, Rho, radius, Cols, Rows )
-				print*, 'el neighbour inicial es:', neighbour													! Comment this line if wanted. Just to check.
+				print*, 'el neighbour inicial es:', neighbour					! Comment this line if wanted. Just to check.
 	
 		do while ( neighbour <= mineffectiveneigh .OR. maxeffectiveneigh <= neighbour )
 			if ( neighbour <= mineffectiveneigh ) then
-				print*, 'previous radius', radius																			! Comment this line if wanted. Just to check.
+				print*, 'previous radius', radius						! Comment this line if wanted. Just to check.
 				radius = radius*maxcoeff
-				print*, 'increased radius', radius																		! Comment this line if wanted. Just to check.
+				print*, 'increased radius', radius						! Comment this line if wanted. Just to check.
 				neighbour = weight( Points( 1:3 , i), Positions, Rho,radius, Cols, Rows )
-				print*, 'neighbour increased is:', neighbour													! Comment this line if wanted. Just to check.
+				print*, 'neighbour increased is:', neighbour					! Comment this line if wanted. Just to check.
 			end if
 			
 			if	( maxeffectiveneigh <= neighbour ) then
-				print*, 'previous radius', radius																			! Comment this line if wanted. Just to check.
+				print*, 'previous radius', radius						! Comment this line if wanted. Just to check.
 				radius = radius*mincoeff
-				print*, 'decreased radius', radius																		! Comment this line if wanted. Just to check.
+				print*, 'decreased radius', radius						! Comment this line if wanted. Just to check.
 				neighbour = weight( Points( 1:3 , i), Positions, Rho, radius, Cols, Rows )
-				print*, 'neighbour decreased is:', neighbour													! Comment this line if wanted. Just to check.
+				print*, 'neighbour decreased is:', neighbour					! Comment this line if wanted. Just to check.
 			end if		
 		end do 
 		
@@ -71,11 +71,11 @@ contains
 		N_NGBr(2, i) = radius
 		
 		print*, ' Tenemos que el neighbourhood efectivo es:', effneighbour				! Comment this line if wanted. Just to check.
-		print*, '**************************************'													! Comment this line if wanted. Just to check.
+		print*, '**************************************'						! Comment this line if wanted. Just to check.
 	end do
 	
-!	print*, shape(N_NGBr(1,:))																								! Comment this line if wanted. Just to check.
-!	print*, shape(N_NGBr(2,:))																								! Comment this line if wanted. Just to check.
+!	print*, shape(N_NGBr(1,:))										! Comment this line if wanted. Just to check.
+!	print*, shape(N_NGBr(2,:))										! Comment this line if wanted. Just to check.
 	
 	return
 
