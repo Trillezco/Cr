@@ -107,7 +107,7 @@ class Interface:
 		return
 	
 	
-		def extract_qties_to_binary(self, filename):
+	def extract_qties_to_binary(self, filename):
 		snap = pynbody.load(filename)
 		snap.set_units_system(velocity = 'km s^-1', mass = 'Msol', temperature = 'K', distance = 'pc') 
 		snap['rho'].convert_units('g cm**-3')
