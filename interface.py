@@ -107,3 +107,71 @@ class Interface:
 		return
 	
 	
+		def extract_qties_to_binary(self, filename):
+		snap = pynbody.load(filename)
+		snap.set_units_system(velocity = 'km s^-1', mass = 'Msol', temperature = 'K', distance = 'pc') 
+		snap['rho'].convert_units('g cm**-3')
+		snap['mass'].convert_units('g')
+		
+		# Convert to normal numpy array type
+		pos = snap['pos'].view(dtype=np.ndarray)
+		B = snap['MagneticField'].view(dtype=np.ndarray)
+		mass = snap['mass'].view(dtype=np.ndarray)
+		rho = snap['rho'].view(dtype=np.ndarray)
+		
+		# Dimension of arrays.
+		row = len(pos)
+		cols = 3
+		
+		# Pass to binary.
+		indexs1D = np.array([4, row, 4]) 
+		indexsKD = np.array([8, row, cols, 8])
+		
+		indexs1D_bin = st.pack('iii', *indexs1D)
+		indexsKD_bin = st.pack('iiii', *indexsKD)
+		
+		with open('Dimension1D.bin', 'wb') as fdimen00:
+			fdimen00.write(indexs1D_bin)
+
+		with open('DimensionKD.bin', 'wb') as fdimen01:
+			fdimen01.write(indexsKD_bin)
+		
+		# Snap's data to binary #
+			# Positions 
+		flatten_pos = pos.flatten('F')
+		flatten_pos = np.insert(flatten_pos, 0, 12)
+		flatten_pos = np.insert(flatten_pos, len(flatten_pos), 12)
+		flatten_pos_bin = st.pack('f'*flatten_pos.size, *flatten_pos)
+		
+		with open('Positions.bin', 'wb') as Coords:
+			Coords.write(flatten_pos_bin)
+		
+			# Magnetic Field
+		flatten_B = B.flatten('F')
+		flatten_B = np.insert(flatten_B, 0, 12)
+		flatten_B = np.insert(flatten_B, len(flatten_B), 12)
+		flatten_B_bin = st.pack('f'*flatten_B.size, *flatten_B)
+		
+		with open('B.bin', 'wb') as Magnetic:
+			Magnetic.write(flatten_B_bin)
+			
+			# Mass
+		flatten_mass = mass.flatten('F')
+		flatten_mass = np.insert(flatten_mass, 0, 12)
+		flatten_mass = np.insert(flatten_mass, len(flatten_mass), 12)
+		flatten_mass_bin = st.pack('f'*flatten_mass.size, *flatten_mass)
+		
+		with open('Mass.bin', 'wb') as Masses:
+			Masses.write(flatten_mass_bin)
+			
+			# Rho
+		flatten_rho = rho.flatten('F')
+		flatten_rho = np.insert(flatten_rho, 0, 12)
+		flatten_rho = np.insert(flatten_rho, len(flatten_rho), 12)
+		flatten_rho_bin = st.pack('f'*flatten_rho.size, *flatten_rho)
+
+		with open('Rho.bin', 'wb') as Rho0:
+			Rho0.write(flatten_rho_bin)
+		
+	
+	
